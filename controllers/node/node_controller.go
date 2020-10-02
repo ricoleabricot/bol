@@ -49,23 +49,21 @@ func (r *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := controllers.InitContext(r, req, r.Log)
 
 	// Get the node resource from request
-	auth, err := kubernetes.GetNode(ctx, req.Namespace, req.Name)
+	node, err := kubernetes.GetNode(ctx, req.Namespace, req.Name)
 	if err != nil {
 		return controllers.ResourceNotFoundError(ctx, err)
 	}
 
-	switch true {
 	// If node resource is set to deleting, clean and remove everything properly
-	case !auth.GetDeletionTimestamp().IsZero():
+	if !node.GetDeletionTimestamp().IsZero() {
 		return r.DeleteResource(ctx)
-
-	// Otherwise, it should upsert the resource idempotently
-	default:
-		return r.UpsertResource(ctx)
 	}
+
+	// Otherwise, it should update the resource idempotently
+	return r.UpdateResource(ctx)
 }
 
-func (r *NodeReconciler) UpsertResource(ctx context.Context) (ctrl.Result, error) {
+func (r *NodeReconciler) UpdateResource(ctx context.Context) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 

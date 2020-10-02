@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const Finalizer = "databaseauthorization.containers.kubernetes.ovhcloud.com/finalizer"
+
 // DatabaseAuthorizationSpec defines the desired state of DatabaseAuthorization
 type DatabaseAuthorizationSpec struct {
 	// Represents the list of services names to synchronize authorized connections

@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/pkg/errors"
 
@@ -9,12 +10,25 @@ import (
 	"github.com/Kafei59/bol/pkg/context"
 )
 
+// ListDatabaseAuthorizations fetches all db auth resources from kubernetes which fits option list
+func ListDatabaseAuthorizations(ctx context.Context, opts *client.ListOptions) (*containersv1alpha1.DatabaseAuthorizationList, error) {
+	kubeClient := context.KubernetesClient(ctx)
+
+	auths := &containersv1alpha1.DatabaseAuthorizationList{}
+	err := kubeClient.List(ctx, auths, opts)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to list database authorizations")
+	}
+
+	return auths, nil
+}
+
 // GetDatabaseAuthorization fetches a db auth resource from kubernetes
 func GetDatabaseAuthorization(ctx context.Context, namespace string, name string) (*containersv1alpha1.DatabaseAuthorization, error) {
-	client := context.KubernetesClient(ctx)
+	kubeClient := context.KubernetesClient(ctx)
 	auth := &containersv1alpha1.DatabaseAuthorization{}
 
-	err := client.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, auth)
+	err := kubeClient.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, auth)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to get database authorization resource")
 	}
@@ -29,9 +43,9 @@ func GetDatabaseAuthorization(ctx context.Context, namespace string, name string
 
 // UpdateDatabaseAuthorization updates a db auth metadata fields
 func UpdateNodePool(ctx context.Context, auth *containersv1alpha1.DatabaseAuthorization) error {
-	client := context.KubernetesClient(ctx)
+	kubeClient := context.KubernetesClient(ctx)
 
-	err := client.Update(ctx, auth)
+	err := kubeClient.Update(ctx, auth)
 	if err != nil {
 		return errors.Wrap(err, "Unable to update database authorization resource")
 	}
@@ -41,9 +55,9 @@ func UpdateNodePool(ctx context.Context, auth *containersv1alpha1.DatabaseAuthor
 
 // UpdateDatabaseAuthorizationStatus update a db auth statuses
 func UpdateDatabaseAuthorizationStatus(ctx context.Context, auth *containersv1alpha1.DatabaseAuthorization) error {
-	client := context.KubernetesClient(ctx)
+	kubeClient := context.KubernetesClient(ctx)
 
-	err := client.Status().Update(ctx, auth)
+	err := kubeClient.Status().Update(ctx, auth)
 	if err != nil {
 		return errors.Wrap(err, "Unable to update database authorization resource statuses")
 	}
@@ -53,10 +67,10 @@ func UpdateDatabaseAuthorizationStatus(ctx context.Context, auth *containersv1al
 
 // DeleteDatabaseAuthorization removes a db auth resource from kubernetes
 func DeleteDatabaseAuthorization(ctx context.Context) error {
-	client := context.KubernetesClient(ctx)
+	kubeClient := context.KubernetesClient(ctx)
 	auth := context.DatabaseAuthorization(ctx)
 
-	err := client.Delete(ctx, auth, nil)
+	err := kubeClient.Delete(ctx, auth, nil)
 	if err != nil {
 		return errors.Wrap(err, "Unable to delete database authorization resource")
 	}

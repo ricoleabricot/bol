@@ -1,6 +1,7 @@
 package authorization
 
 import (
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -38,30 +39,68 @@ func (r *DatabaseAuthorizationReconciler) Reconcile(req ctrl.Request) (ctrl.Resu
 	if err != nil {
 		return controllers.ResourceNotFoundError(ctx, err)
 	}
+	ctx = context.WithDatabaseAuthorization(ctx, auth)
 
-	switch true {
 	// If db auth resource is set to deleting, clean and remove everything properly
-	case auth.IsDeleting():
+	if auth.IsDeleting() {
 		return r.DeleteResource(ctx)
-
-	// If we see any changes on the object generation observed, update the resource, otherwise, sync it
-	case auth.HasBeenUpdated():
-		return r.UpdateResource(ctx)
-
-	// Otherwise, it should create the resource
-	default:
-		return r.CreateResource(ctx)
 	}
+
+	// Otherwise, it should update the resource idempotently
+	return r.UpdateResource(ctx)
 }
 
-func (r *DatabaseAuthorizationReconciler) CreateResource(ctx context.Context) (ctrl.Result, error) {
-	return ctrl.Result{}, nil
-}
-
+// UpdateResource will apply all modifications on database authorized lists
 func (r *DatabaseAuthorizationReconciler) UpdateResource(ctx context.Context) (ctrl.Result, error) {
+	auth := context.DatabaseAuthorization(ctx)
+	log := context.Logger(ctx)
+
+	log.WithValues("event", "update")
+
+	// Attach finalizer if needed
+	done := auth.AddFinalizer()
+	if done {
+		log.Info("Set finalizer to resource")
+	}
+
+	// Forge list options with authorization labels selector
+	opts := &client.ListOptions{}
+	if len(auth.Spec.LabelSelector.MatchLabels) > 0 {
+		sel := labels.SelectorFromSet(auth.Spec.LabelSelector.MatchLabels)
+		opts.LabelSelector = sel
+	}
+
+	// Fetch all nodes resources which fits authorization label selectors
+	nodes, err := kubernetes.ListNodes(ctx, opts)
+	if err != nil {
+		log.Error(err, "Unable to list nodes")
+
+		return ctrl.Result{}, err
+	}
+
+	// TODO: set in status all authorized ips to be able to remove it afterwards
+	// TODO: find a way to be able to remove authorized list when label / services changes in auth resource
+
+	for _, node := range nodes.Items {
+		ip, err := kubernetes.GetNodeIP(ctx, &node)
+		if err != nil {
+			log.Error(err, "Unable to get node ip")
+
+			return ctrl.Result{}, err
+		}
+
+		log.Info("IP should be authorized", "ip", ip)
+	}
+
 	return ctrl.Result{}, nil
 }
 
+// DeleteResource will remove all database authorized lists
 func (r *DatabaseAuthorizationReconciler) DeleteResource(ctx context.Context) (ctrl.Result, error) {
+	_ = context.DatabaseAuthorization(ctx)
+	log := context.Logger(ctx)
+
+	log.WithValues("event", "update")
+
 	return ctrl.Result{}, nil
 }

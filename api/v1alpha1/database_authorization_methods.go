@@ -34,11 +34,11 @@ func (da *DatabaseAuthorization) SetFinalizers(finalizers []string) {
 }
 
 // HasFinalizer checks if the resource is bound to a finalizer
-func (da *DatabaseAuthorization) HasFinalizer(finalizer string) bool {
+func (da *DatabaseAuthorization) HasFinalizer() bool {
 	finalizers := da.GetFinalizers()
 
 	for _, f := range finalizers {
-		if f == finalizer {
+		if f == Finalizer {
 			return true
 		}
 	}
@@ -47,26 +47,26 @@ func (da *DatabaseAuthorization) HasFinalizer(finalizer string) bool {
 }
 
 // AddFinalizer binds a finalizer to the resource if needed
-func (da *DatabaseAuthorization) AddFinalizer(finalizer string) bool {
-	if da.HasFinalizer(finalizer) {
+func (da *DatabaseAuthorization) AddFinalizer() bool {
+	if da.HasFinalizer() {
 		return false
 	}
 
-	finalizers := append(da.GetFinalizers(), finalizer)
+	finalizers := append(da.GetFinalizers(), Finalizer)
 	da.SetFinalizers(finalizers)
 
 	return true
 }
 
 // RemoveFinalizer removes the resource finalizer if it's bound
-func (da *DatabaseAuthorization) RemoveFinalizer(finalizer string) bool {
-	if !da.HasFinalizer(finalizer) {
+func (da *DatabaseAuthorization) RemoveFinalizer() bool {
+	if !da.HasFinalizer() {
 		return false
 	}
 
 	finalizers := da.GetFinalizers()
 	for i, value := range finalizers {
-		if value == finalizer {
+		if value == Finalizer {
 			finalizers = append(finalizers[:i], finalizers[i+1:]...)
 			break
 		}

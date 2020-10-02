@@ -3,5 +3,14 @@ kind: DatabaseAuthorization
 metadata:
   name: databaseauthorization-sample
 spec:
-  # Add fields here
-  foo: bar
+  ovhServices:
+    - ks123-ovh
+  ovhCredentials:
+    token:
+      name: ovh-credentials
+      namespace: default
+    application:
+      name: ovh-credentials
+      namespace: default
+  labelSelector:
+    matchLabel: []
