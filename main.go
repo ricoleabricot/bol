@@ -26,8 +26,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	// +kubebuilder:scaffold:imports
 	containersv1alpha1 "github.com/Kafei59/bol/api/v1alpha1"
+	// +kubebuilder:scaffold:imports
+
 	"github.com/Kafei59/bol/controllers/authorization"
 	"github.com/Kafei59/bol/controllers/node"
 )

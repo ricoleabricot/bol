@@ -16,37 +16,59 @@ limitations under the License.
 package node
 
 import (
-	"context"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
+
+	"github.com/Kafei59/bol/controllers"
+	"github.com/Kafei59/bol/pkg/context"
+	"github.com/Kafei59/bol/pkg/kubernetes"
 )
 
 // NodeReconciler reconciles a Node object
 type NodeReconciler struct {
 	client.Client
+
 	Log    logr.Logger
 	Scheme *runtime.Scheme
-}
-
-// +kubebuilder:rbac:groups=,resources=nodes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=,resources=nodes/status,verbs=get;update;patch
-
-func (r *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("node", req.NamespacedName)
-
-	// your logic here
-
-	return ctrl.Result{}, nil
 }
 
 func (r *NodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Node{}).
 		Complete(r)
+}
+
+// +kubebuilder:rbac:groups=,resources=nodes,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=,resources=nodes/status,verbs=get;update;patch
+
+func (r *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	ctx := controllers.InitContext(r, req, r.Log)
+
+	// Get the node resource from request
+	auth, err := kubernetes.GetNode(ctx, req.Namespace, req.Name)
+	if err != nil {
+		return controllers.ResourceNotFoundError(ctx, err)
+	}
+
+	switch true {
+	// If node resource is set to deleting, clean and remove everything properly
+	case !auth.GetDeletionTimestamp().IsZero():
+		return r.DeleteResource(ctx)
+
+	// Otherwise, it should upsert the resource idempotently
+	default:
+		return r.UpsertResource(ctx)
+	}
+}
+
+func (r *NodeReconciler) UpsertResource(ctx context.Context) (ctrl.Result, error) {
+	return ctrl.Result{}, nil
+}
+
+func (r *NodeReconciler) DeleteResource(ctx context.Context) (ctrl.Result, error) {
+	return ctrl.Result{}, nil
 }
