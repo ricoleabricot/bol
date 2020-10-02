@@ -1,0 +1,7 @@
+apiVersion: containers.ovhcloud.com/v1alpha1
+kind: DatabaseAuthorization
+metadata:
+  name: databaseauthorization-sample
+spec:
+  # Add fields here
+  foo: bar

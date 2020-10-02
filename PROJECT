@@ -1,0 +1,7 @@
+domain: ovhcloud.com
+repo: github.com/Kafei59/bol
+resources:
+- group: containers
+  kind: DatabaseAuthorization
+  version: v1alpha1
+version: "2"

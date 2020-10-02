@@ -1,0 +1,26 @@
+# permissions to do edit databaseauthorizations.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: databaseauthorization-editor-role
+rules:
+- apiGroups:
+  - containers.ovhcloud.com
+  resources:
+  - databaseauthorizations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - containers.ovhcloud.com
+  resources:
+  - databaseauthorizations/status
+  verbs:
+  - get
+  - patch
+  - update

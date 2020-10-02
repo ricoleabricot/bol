@@ -1,0 +1,20 @@
+# permissions to do viewer databaseauthorizations.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: databaseauthorization-viewer-role
+rules:
+- apiGroups:
+  - containers.ovhcloud.com
+  resources:
+  - databaseauthorizations
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - containers.ovhcloud.com
+  resources:
+  - databaseauthorizations/status
+  verbs:
+  - get
